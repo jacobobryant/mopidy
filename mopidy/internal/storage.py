@@ -54,6 +54,7 @@ def dump(path, data):
         with gzip.GzipFile(fileobj=tmp, mode='wb') as fp:
             json.dump(data, fp, cls=models.ModelJSONEncoder,
                       indent=2, separators=(',', ': '))
+        tmp.close()
         os.rename(tmp.name, path)
     finally:
         if os.path.exists(tmp.name):

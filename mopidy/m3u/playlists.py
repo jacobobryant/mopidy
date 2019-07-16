@@ -15,6 +15,9 @@ from . import Extension, translator
 
 logger = logging.getLogger(__name__)
 
+_reopen_openflags = os.O_RDWR | os.O_EXCL
+if hasattr(os, 'O_NOFOLLOW'):
+    _reopen_openflags |= os.O_NOFOLLOW
 
 def log_environment_error(message, error):
     if isinstance(error.strerror, bytes):
@@ -34,6 +37,15 @@ def replace(path, mode='w+b', encoding=None, errors=None):
         path = path.decode(sys.getfilesystemencoding())
         (fd, tempname) = tempfile.mkstemp(dir=os.path.dirname(path))
     try:
+        os.close(fd)
+        if os.path.exists(path):
+            os.remove(path)
+        os.rename(tempname, path)
+        fd = os.open(path, _reopen_openflags, 0o600)
+    except:
+        os.remove(tempname)
+        raise
+    try:
         fp = io.open(fd, mode, encoding=encoding, errors=errors)
     except Exception:
         os.remove(tempname)
@@ -43,7 +55,6 @@ def replace(path, mode='w+b', encoding=None, errors=None):
         yield fp
         fp.flush()
         os.fsync(fd)
-        os.rename(tempname, path)
     except Exception:
         os.remove(tempname)
         raise

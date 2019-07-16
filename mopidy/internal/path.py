@@ -5,6 +5,7 @@ import os
 import re
 import stat
 import string
+import sys
 import threading
 
 from mopidy import compat, exceptions
@@ -142,7 +143,8 @@ def _find_worker(relative, follow, done, work, results, errors):
                 errors[path] = exceptions.FindError('Sym/hardlink loop found.')
                 continue
 
-            parents = parents + [(st.st_dev, st.st_ino)]
+            if sys.platform != 'win32' or st.st_ino != 0:
+                 parents = parents + [(st.st_dev, st.st_ino)]
             if stat.S_ISDIR(st.st_mode):
                 for e in os.listdir(entry):
                     work.put((os.path.join(entry, e), parents))

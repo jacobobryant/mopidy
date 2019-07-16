@@ -50,14 +50,19 @@ class FileLibraryProvider(backend.LibraryProvider):
         if local_path == 'root':
             return list(self._get_media_dirs_refs())
 
-        if not self._is_in_basedir(os.path.realpath(local_path)):
+        if sys.platform == 'win32':
+            #strip leading /
+            real_local_path = os.path.realpath(local_path[1:])
+        else:
+            real_local_path = os.path.realpath(local_path)
+        if not self._is_in_basedir(real_local_path):
             logger.warning(
                 'Rejected attempt to browse path (%s) outside dirs defined '
                 'in file/media_dirs config.', uri)
             return []
 
-        for dir_entry in os.listdir(local_path):
-            child_path = os.path.join(local_path, dir_entry)
+        for dir_entry in os.listdir(real_local_path):
+            child_path = os.path.join(real_local_path, dir_entry)
             uri = path.path_to_uri(child_path)
 
             if not self._show_dotfiles and dir_entry.startswith(b'.'):
