@@ -55,6 +55,8 @@ def dump(path, data):
             json.dump(data, fp, cls=models.ModelJSONEncoder,
                       indent=2, separators=(',', ': '))
         tmp.close()
+        if os.path.exists(path):
+            os.remove(path)
         os.rename(tmp.name, path)
     finally:
         if os.path.exists(tmp.name):
