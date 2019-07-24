@@ -617,6 +617,15 @@ class TracklistController(object):
         # TODO: validate slice?
         return self._tl_tracks[start:end]
 
+    def replace_queue(self, tracks):
+        pos = self.index()
+        insert_position = 0 if pos is None else pos + 1
+        self.add(tracks=tracks, at_position=insert_position)
+        tl_tracks = self.get_tl_tracks()
+        remove_tlids = [t.tlid for t in tl_tracks[insert_position + 10:]]
+        if len(remove_tlids) > 0:
+            self.core.tracklist.remove({'tlid': remove_tlids})
+
     def _mark_playing(self, tl_track):
         """Internal method for :class:`mopidy.core.PlaybackController`."""
         if self.get_random() and tl_track in self._shuffled:
