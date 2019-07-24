@@ -36,6 +36,9 @@ class PlaybackController(object):
             self._audio.set_about_to_finish_callback(
                 self._on_about_to_finish_callback)
 
+        self._lock_next = False
+        self._next_pending = False
+
     def _get_backend(self, tl_track):
         if tl_track is None:
             return None
@@ -304,6 +307,15 @@ class PlaybackController(object):
         elif self.get_current_tl_track() not in self.core.tracklist.tl_tracks:
             self._set_current_tl_track(None)
 
+    def lock_next(self):
+        self._lock_next = True
+
+    def unlock_next(self):
+        self._lock_next = False
+        if self._next_pending:
+            self._next_pending = False
+            self.next()
+
     def next(self):
         """
         Change to the next track.
@@ -311,6 +323,10 @@ class PlaybackController(object):
         The current playback state will be kept. If it was playing, playing
         will continue. If it was paused, it will still be paused, etc.
         """
+        if self._lock_next:
+            self._next_pending = True
+            return
+
         state = self.get_state()
         current = self._pending_tl_track or self._current_tl_track
         # avoid endless loop if 'repeat' is 'true' and no track is playable

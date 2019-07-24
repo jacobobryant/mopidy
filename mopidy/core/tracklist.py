@@ -618,13 +618,21 @@ class TracklistController(object):
         return self._tl_tracks[start:end]
 
     def replace_queue(self, tracks):
+        self.core.playback.lock_next()
         pos = self.index()
         insert_position = 0 if pos is None else pos + 1
+
+        # filter current track
+        if pos is not None:
+            current_track = self.get_tracks()[pos]
+            tracks = [t for t in tracks if t != current_track]
+
         self.add(tracks=tracks, at_position=insert_position)
         tl_tracks = self.get_tl_tracks()
         remove_tlids = [t.tlid for t in tl_tracks[insert_position + 10:]]
         if len(remove_tlids) > 0:
-            self.core.tracklist.remove({'tlid': remove_tlids})
+            self.remove({'tlid': remove_tlids})
+        self.core.playback.unlock_next()
 
     def _mark_playing(self, tl_track):
         """Internal method for :class:`mopidy.core.PlaybackController`."""
