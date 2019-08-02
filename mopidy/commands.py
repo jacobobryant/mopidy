@@ -321,6 +321,8 @@ class RootCommand(Command):
         except Exception:
             logger.exception('Uncaught exception')
         finally:
+            import traceback
+            traceback.print_exc()
             loop.quit()
             self.stop_frontends(frontend_classes)
             self.stop_core(core)
